@@ -7,3 +7,4 @@ RUN rm -rf /usr/local/apache2/htdocs/*
 # Copy your static website files into Apache's web directory
 COPY . /usr/local/apache2/htdocs/
 
+Expose 80
