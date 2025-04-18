@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'httpd'
+        DOCKER_TAG = 'latest'
+        REGISTRY = 'https://hub.docker.com/repositories/skumar143'  // e.g., Docker Hub or AWS ECR
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/Santhoshkrk/NEWdeploy.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build Docker image using Dockerfile
+                    sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Push image to registry (if needed)
+                    sh 'docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}'
+                    sh 'docker push ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}'
+                }
+            }
+        }
+
+        stage('Deploy to Server') {
+            steps {
+                script {
+                    // SSH into your server, pull the Docker image and run it
+                    sh '''
+                    ssh root@ip-172-31-42-126  << EOF
+                    docker pull ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker run -d -p 80:3000 ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    EOF
+                    '''
+                }
+            }
+        }
+    }
+}
+
